@@ -1,0 +1,356 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-dark: #1A1A1A;
+    --bg-medium: #2C2C2C;
+    --border-light: #444;
+    --text-light: #E0E0E0;
+    --accent-blue: #007bff; /* Original */
+    --accent-blue-neon: #00FFFF; /* More vibrant */
+    --accent-red: #E74C3C;
+    --control-btn-bg: rgba(68, 68, 68, 0.7);
+    --control-btn-hover: rgba(85, 85, 85, 0.9);
+    --control-bar-bg-glass: rgba(44, 44, 44, 0.6); /* Glassy effect */
+    --control-bar-border-glass: rgba(100, 100, 100, 0.3);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden; /* Prevent scroll */
+}
+
+.call-container {
+    background-color: var(--bg-medium);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 95vw;
+    max-width: 1400px;
+    height: 90vh;
+    max-height: 800px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative; /* For the glassy control bar */
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--accent-blue-neon);
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.app-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.connection-status {
+    font-size: 0.85em;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-controls i {
+    font-size: 1.2em;
+    margin-left: 20px;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: color 0.2s ease;
+}
+
+.header-controls i:hover {
+    color: var(--accent-blue-neon);
+}
+
+/* Video Grid Area */
+.video-grid-area {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: 1fr; /* Initially single column for flexibility */
+    grid-template-rows: 1fr;
+    gap: 15px;
+    padding: 15px;
+    position: relative;
+    overflow: hidden; /* To handle internal scrolling if many videos */
+}
+
+.participant-video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid */
+    grid-auto-rows: minmax(150px, 1fr); /* Auto-adjust row height */
+    gap: 15px;
+    flex-grow: 1; /* Allows grid to take available space */
+    overflow-y: auto; /* Scroll if too many participants */
+    padding-right: 5px; /* For scrollbar */
+}
+
+/* Screen Share Display */
+.screen-share-display-placeholder {
+    grid-column: 1 / -1; /* Span full width */
+    background-color: #000;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.5em;
+    font-weight: 500;
+    border: 2px dashed rgba(0, 255, 255, 0.4);
+    position: relative; /* For stop sharing button */
+    padding: 20px; /* Some internal padding */
+    min-height: 200px;
+}
+
+.screen-share-display-placeholder p {
+    margin-bottom: 20px;
+}
+
+.screen-share-display-placeholder .stop-sharing-btn {
+    background-color: var(--accent-red);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+}
+
+.screen-share-display-placeholder .stop-sharing-btn:hover {
+    background-color: darken(var(--accent-red), 10%);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Video Tile */
+.video-tile {
+    background-color: var(--bg-medium);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-light); /* Subtle border */
+    aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+}
+
+.video-tile video,
+.video-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block; /* Remove extra space below img/video */
+}
+
+.video-tile .participant-name {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    font-weight: 500;
+    color: var(--text-light);
+    z-index: 10; /* Ensure it's above video */
+}
+
+.video-tile .overlay-icons {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    color: var(--text-light);
+    font-size: 1em;
+    z-index: 10;
+}
+
+.video-tile .overlay-icons .muted {
+    color: var(--accent-red);
+}
+
+.local-user {
+    border: 2px solid var(--accent-blue-neon); /* Highlight local user */
+}
+
+/* Control Bar */
+.control-bar-wrapper {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: sticky; /* Keeps it at the bottom */
+    bottom: 0;
+    z-index: 100;
+}
+
+.control-bar {
+    background-color: var(--control-bar-bg-glass);
+    backdrop-filter: blur(10px); /* Glassmorphism effect */
+    -webkit-backdrop-filter: blur(10px); /* For Safari */
+    border: 1px solid var(--control-bar-border-glass);
+    border-radius: 50px; /* Pill shape */
+    padding: 10px 20px;
+    display: flex;
+    gap: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    margin-bottom: 10px;
+}
+
+.control-btn {
+    background-color: var(--control-btn-bg);
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: var(--text-light);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    position: relative; /* For tooltips if added later */
+}
+
+.control-btn:hover {
+    background-color: var(--control-btn-hover);
+    transform: translateY(-2px);
+}
+
+.control-btn.active {
+    background-color: var(--accent-blue-neon);
+    color: var(--bg-dark); /* Darker text on bright background */
+}
+
+.end-call-btn {
+    background-color: var(--accent-red);
+    margin-left: 20px; /* Space out the end call button */
+}
+
+.end-call-btn:hover {
+    background-color: darken(var(--accent-red), 10%);
+}
+
+.stats-display {
+    font-size: 0.8em;
+    color: var(--text-light);
+    background-color: var(--control-bar-bg-glass);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--control-bar-border-glass);
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .call-container {
+        width: 98vw;
+        height: 95vh;
+    }
+
+    .header {
+        padding: 10px 15px;
+        font-size: 1em;
+    }
+
+    .app-info {
+        gap: 10px;
+    }
+
+    .header-controls i {
+        margin-left: 15px;
+        font-size: 1em;
+    }
+
+    .video-grid-area {
+        padding: 10px;
+    }
+
+    .participant-video-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+    }
+
+    .screen-share-display-placeholder {
+        font-size: 1.2em;
+        min-height: 150px;
+    }
+
+    .control-bar {
+        padding: 8px 15px;
+        gap: 10px;
+    }
+
+    .control-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1em;
+    }
+
+    .end-call-btn {
+        margin-left: 10px;
+    }
+
+    .stats-display {
+        font-size: 0.7em;
+        padding: 4px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .call-container {
+        border-radius: 0; /* Full screen on small devices */
+    }
+
+    .app-logo {
+        display: none; /* Hide logo to save space */
+    }
+
+    .connection-status {
+        font-size: 0.75em;
+    }
+
+    .control-bar {
+        flex-wrap: wrap; /* Allow buttons to wrap */
+        justify-content: center;
+        width: 90%;
+        border-radius: 20px; /* More compact pill */
+    }
+
+    .control-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9em;
+    }
+    .end-call-btn {
+        margin-left: 0; /* Remove extra margin if wrapping */
+    }
+    .stats-display {
+        display: none; /* Hide stats on very small screens if necessary */
+    }
+}

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DropIn - Powered by ARA FFP</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="call-container">
+        <div class="header">
+            <div class="app-info">
+                <span class="app-logo">DropIn - Powered by ARA FFP</span>
+                <span class="connection-status"><i class="fas fa-wifi"></i> Connection: Excellent</span>
+            </div>
+            <div class="header-controls">
+                <i class="fas fa-cog"></i>
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+
+        <div class="video-grid-area">
+            <!-- Screen Share Placeholder (initially hidden or shown based on state) -->
+            <div id="screen-share-display" class="screen-share-display-placeholder hidden">
+                <p>Presenter's Screen</p>
+                <button class="stop-sharing-btn">Stop Sharing</button>
+            </div>
+
+            <!-- Participant Video Grid -->
+            <div id="participant-video-grid" class="participant-video-grid">
+                <!-- Local User Video (always present) -->
+                <div id="local-video-container" class="video-tile local-user">
+                    <video id="local-video" autoplay muted playsinline></video>
+                    <span class="participant-name">You</span>
+                    <div class="overlay-icons">
+                        <i class="fas fa-microphone-alt"></i>
+                        <i class="fas fa-video"></i>
+                    </div>
+                </div>
+
+                <!-- Remote Participant Video Tiles will be appended here by ffp_client.js -->
+                <!-- Example of a remote tile structure:
+                <div id="remote-user-ID" class="video-tile">
+                    <img src="data:image/jpeg;base64,..." alt="Participant Video">
+                    <span class="participant-name">Remote User Name</span>
+                    <div class="overlay-icons">
+                        <i class="fas fa-microphone-alt-slash muted"></i>
+                        <i class="fas fa-video"></i>
+                    </div>
+                </div>
+                -->
+            </div>
+        </div>
+
+        <div class="control-bar-wrapper">
+            <div class="control-bar">
+                <button id="mic-toggle" class="control-btn active" title="Toggle Microphone">
+                    <i class="fas fa-microphone-alt"></i>
+                </button>
+                <button id="cam-toggle" class="control-btn active" title="Toggle Camera">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button id="screen-share-toggle" class="control-btn" title="Screen Share">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+                <button id="motion-twin-btn" class="control-btn" title="Motion Twin (Collaboration Hub)">
+                    <i class="fas fa-cubes"></i> <!-- Replaced with a more abstract icon for collaboration hub -->
+                </button>
+                <button id="record-studio-btn" class="control-btn" title="Record Studio">
+                    <i class="fas fa-video-camera"></i> <!-- Represents recording/editing studio -->
+                </button>
+                <button id="background-swap-btn" class="control-btn" title="Background Swapping">
+                    <i class="fas fa-image"></i> <!-- Represents image/background -->
+                </button>
+                <button id="broadcast-studio-btn" class="control-btn" title="Broadcast Studio">
+                    <i class="fas fa-broadcast-tower"></i> <!-- Represents broadcasting -->
+                </button>
+                <button id="end-call-btn" class="control-btn end-call-btn" title="End Call">
+                    <i class="fas fa-phone-slash"></i>
+                </button>
+            </div>
+            <div class="stats-display">
+                Stats: <span id="frame-stats">0 Keps, 0fps</span>
+            </div>
+        </div>
+    </div>
+
+<!-- Socket.IO client library -->
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- FFP client logic -->
+<script src="ffp_client.js"></script>
+
+<!-- UI/Manager logic -->
+<script src="dropin_manager.js"></script>
+
+
+
+
+</body>
+</html>
