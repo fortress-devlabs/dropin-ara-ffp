@@ -30,7 +30,8 @@ const FFPClient = (() => {
         screenShareDisplay = shareDisplay;
         statsCallback = statsFn;
 
-        socket = io();
+      socket = io("https://dropin-ara-ffp.onrender.com");
+
       socket.on('connect', () => {
     console.log("FFP connected with ID:", socket.id);
     socket.emit('join', 'default-room'); // <--- add this line
