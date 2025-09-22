@@ -195,8 +195,16 @@ body {
 }
 
 .local-user {
-    border: 2px solid var(--accent-blue-neon); /* Highlight local user */
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 120px;
+    border: 2px solid var(--accent-blue-neon);
+    border-radius: 8px;
+    z-index: 50;
 }
+
 
 /* Control Bar */
 .control-bar-wrapper {
