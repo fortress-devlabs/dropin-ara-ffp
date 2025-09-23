@@ -114,7 +114,7 @@ const FFPClient = (() => {
         const curr = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         if (!lastFrameData || calcDiff(curr, lastFrameData) > FRAME_DIFFERENCE_THRESHOLD) {
             const jpeg = canvas.toDataURL('image/jpeg', 0.7);
-            socket.emit('frame', { data: jpeg, type: 'video' });
+            socket.volatile.emit('frame', { data: jpeg, type: 'video' });
             framesSent++;
             lastFrameData = curr;
             lastSendTime = now;
