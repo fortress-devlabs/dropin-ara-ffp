@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
     socket.on('frame', ({ data, type }) => {
         const rooms = [...socket.rooms].filter(r => r !== socket.id);
         rooms.forEach(roomId => {
-            socket.to(roomId).emit('frame', { senderId: socket.id, data, type });
+            socket.to(roomId).volatile.emit('frame', { senderId: socket.id, data, type });
         });
     });
 
