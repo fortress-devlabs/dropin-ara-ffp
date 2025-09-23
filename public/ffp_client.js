@@ -185,11 +185,31 @@ const FFPClient = (() => {
         participantVideoGrid.appendChild(container);
     }
 
-    function renderRemoteFrame(userKey, data, type) {
-        createParticipantTile(userKey);
-        const imgEl = document.getElementById(`video-${userKey}`);
-        if (imgEl) imgEl.src = data;
+ function renderRemoteFrame(senderId, data, type, userId) {
+    // Prefer userId for uniqueness
+    const idKey = userId || senderId;
+
+    let imgEl = document.getElementById(`video-${idKey}`);
+    if (!imgEl) {
+        const container = document.createElement('div');
+        container.id = `container-${idKey}`;
+        container.className = 'video-tile';
+
+        imgEl = document.createElement('img');
+        imgEl.id = `video-${idKey}`;
+        container.appendChild(imgEl);
+
+        const name = document.createElement('span');
+        name.className = 'participant-name';
+        name.textContent = (userId || senderId).substring(0, 8);
+        container.appendChild(name);
+
+        participantVideoGrid.appendChild(container);
     }
+
+    imgEl.src = data;
+}
+
 
     // --- API for UI ---
     function toggleMic(enabled) {
