@@ -36,11 +36,24 @@ const FFPClient = (() => {
 
         socket = io("https://dropin-ara-ffp.onrender.com");
 
-        socket.on("connect", () => {
-            console.log("FFP connected with ID:", socket.id, "userId:", userId);
-            socket.emit("join", { roomId: "default-room", userId });
-            startLocalMedia();
-        });
+       socket.on("connect", () => {
+    // get roomId from URL or fallback
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get("room") || "default-room";
+
+    // persistent userId
+    const userId = localStorage.getItem("userId") || crypto.randomUUID();
+    localStorage.setItem("userId", userId);
+
+    console.log("FFP connected with ID:", socket.id, "userId:", userId, "roomId:", roomId);
+
+    // join with room + userId
+    socket.emit("join", { roomId, userId });
+
+    // start camera/audio
+    startLocalMedia();
+});
+
 
         socket.on("disconnect", () => {
             console.log("Disconnected from server");
