@@ -36,13 +36,19 @@ io.on('connection', (socket) => {
         socket.to(roomId).emit('user_joined', { socketId: socket.id, userId });
     });
 
-    // Relay video/screen frames
-    socket.on('frame', ({ data, type, userId }) => {
-        const rooms = [...socket.rooms].filter(r => r !== socket.id);
-        rooms.forEach(roomId => {
-            socket.to(roomId).emit('frame', { senderId: socket.id, userId, data, type });
+ // Relay video/screen frames
+socket.on("frame", ({ data, type, userId }) => {
+    const rooms = [...socket.rooms].filter(r => r !== socket.id);
+    for (const roomId of rooms) {
+        socket.to(roomId).volatile.emit("frame", {
+            senderId: socket.id,
+            userId: socket.data.userId || userId,
+            data,
+            type
         });
-    });
+    }
+});
+
 
     // Relay mic/cam toggles
     socket.on('toggle-audio', (enabled) => {
