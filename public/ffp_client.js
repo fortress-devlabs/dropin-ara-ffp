@@ -23,6 +23,10 @@ const FFPClient = (() => {
     let framesSent = 0;
     let lastStatsUpdateTime = 0;
 
+    // Generate a persistent ID (per browser/device session)
+    const userId = localStorage.getItem("dropinUserId") || crypto.randomUUID();
+    localStorage.setItem("dropinUserId", userId);
+
     // --- Setup ---
     function init({ localVideo, participantVideoGrid: grid, screenShareDisplay: shareDisplay, statsCallback: statsFn }) {
         localVideoEl = localVideo;
@@ -30,59 +34,62 @@ const FFPClient = (() => {
         screenShareDisplay = shareDisplay;
         statsCallback = statsFn;
 
-      socket = io("https://dropin-ara-ffp.onrender.com");
+        socket = io("https://dropin-ara-ffp.onrender.com");
 
-      socket.on('connect', () => {
-    console.log("FFP connected with ID:", socket.id);
-    socket.emit('join', 'default-room'); // <--- add this line
-    startLocalMedia();
-});
+        socket.on("connect", () => {
+            console.log("FFP connected with ID:", socket.id, "userId:", userId);
+            socket.emit("join", { roomId: "default-room", userId });
+            startLocalMedia();
+        });
 
-
-        socket.on('disconnect', () => {
+        socket.on("disconnect", () => {
             console.log("Disconnected from server");
             stopSendingFrames();
             if (localStream) localStream.getTracks().forEach(track => track.stop());
         });
 
-        socket.on('frame', ({ senderId, data, type }) => {
+        socket.on("frame", ({ senderId, userId: senderUserId, data, type }) => {
             if (senderId === socket.id) return;
-            renderRemoteFrame(senderId, data, type);
+            renderRemoteFrame(senderUserId || senderId, data, type);
         });
 
-        socket.on('participant-left', (id) => {
-            const el = document.getElementById(`container-${id}`);
+        socket.on("user_joined", ({ socketId, userId: joinedUserId }) => {
+            console.log("User joined:", joinedUserId, "(socket:", socketId, ")");
+            createParticipantTile(joinedUserId);
+        });
+
+        socket.on("participant-left", ({ socketId, userId: leftUserId }) => {
+            console.log("User left:", leftUserId, "(socket:", socketId, ")");
+            const el = document.getElementById(`container-${leftUserId}`);
             if (el) el.remove();
         });
     }
 
     // --- Local media ---
-   async function startLocalMedia() {
-    try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        localVideoTrack = localStream.getVideoTracks()[0];
-        localAudioTrack = localStream.getAudioTracks()[0];
-        localVideoEl.srcObject = localStream;
+    async function startLocalMedia() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            localVideoTrack = localStream.getVideoTracks()[0];
+            localAudioTrack = localStream.getAudioTracks()[0];
+            localVideoEl.srcObject = localStream;
 
-        // Force play on mobile (iOS/Android needs this wrapped in a try)
-        localVideoEl.muted = true; // Required on some browsers
-        const playPromise = localVideoEl.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(err => {
-                console.warn("Autoplay blocked, waiting for user gesture:", err);
-            });
+            localVideoEl.muted = true; // prevent echo
+            const playPromise = localVideoEl.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                    console.warn("Autoplay blocked, waiting for user gesture:", err);
+                });
+            }
+
+            startSendingFrames();
+        } catch (err) {
+            console.error("Media error:", err);
         }
-
-        startSendingFrames();
-    } catch (err) {
-        console.error("Media error:", err);
     }
-}
-
 
     // --- Frame sending ---
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
     function calcDiff(f1, f2) {
         if (!f1 || !f2 || f1.length !== f2.length) return Infinity;
@@ -113,8 +120,8 @@ const FFPClient = (() => {
 
         const curr = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         if (!lastFrameData || calcDiff(curr, lastFrameData) > FRAME_DIFFERENCE_THRESHOLD) {
-            const jpeg = canvas.toDataURL('image/jpeg', 0.7);
-            socket.volatile.emit('frame', { data: jpeg, type: 'video' });
+            const jpeg = canvas.toDataURL("image/jpeg", 0.7);
+            socket.emit("frame", { senderId: socket.id, userId, data: jpeg, type: "video" });
             framesSent++;
             lastFrameData = curr;
             lastSendTime = now;
@@ -146,25 +153,29 @@ const FFPClient = (() => {
     }
 
     // --- Remote rendering ---
-    function renderRemoteFrame(senderId, data, type) {
-        let imgEl = document.getElementById(`video-${senderId}`);
-        if (!imgEl) {
-            const container = document.createElement('div');
-            container.id = `container-${senderId}`;
-            container.className = 'video-tile';
+    function createParticipantTile(userKey) {
+        if (document.getElementById(`container-${userKey}`)) return;
 
-            imgEl = document.createElement('img');
-            imgEl.id = `video-${senderId}`;
-            container.appendChild(imgEl);
+        const container = document.createElement("div");
+        container.id = `container-${userKey}`;
+        container.className = "video-tile";
 
-            const name = document.createElement('span');
-            name.className = 'participant-name';
-            name.textContent = senderId.substring(0, 8);
-            container.appendChild(name);
+        const imgEl = document.createElement("img");
+        imgEl.id = `video-${userKey}`;
+        container.appendChild(imgEl);
 
-            participantVideoGrid.appendChild(container);
-        }
-        imgEl.src = data;
+        const name = document.createElement("span");
+        name.className = "participant-name";
+        name.textContent = userKey.substring(0, 8);
+        container.appendChild(name);
+
+        participantVideoGrid.appendChild(container);
+    }
+
+    function renderRemoteFrame(userKey, data, type) {
+        createParticipantTile(userKey);
+        const imgEl = document.getElementById(`video-${userKey}`);
+        if (imgEl) imgEl.src = data;
     }
 
     // --- API for UI ---
@@ -188,7 +199,7 @@ const FFPClient = (() => {
         try {
             const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
             const track = stream.getVideoTracks()[0];
-            const tempVideo = document.createElement('video');
+            const tempVideo = document.createElement("video");
             tempVideo.srcObject = stream;
             tempVideo.play();
 
@@ -196,8 +207,8 @@ const FFPClient = (() => {
                 canvas.width = tempVideo.videoWidth;
                 canvas.height = tempVideo.videoHeight;
                 ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
-                const jpeg = canvas.toDataURL('image/jpeg', 0.7);
-                socket.emit('frame', { data: jpeg, type: 'screen' });
+                const jpeg = canvas.toDataURL("image/jpeg", 0.7);
+                socket.emit("frame", { senderId: socket.id, userId, data: jpeg, type: "screen" });
                 requestAnimationFrame(sendScreen);
             }
             requestAnimationFrame(sendScreen);
@@ -209,7 +220,7 @@ const FFPClient = (() => {
     }
 
     function stopScreenShare() {
-        socket.emit('stop-screen-share');
+        socket.emit("stop-screen-share");
     }
 
     function disconnect() {
